@@ -1,31 +1,78 @@
-var express = require('express')
-  , app = express.createServer();
+/*
+ * Module dependencies.
+ */
 
-var users = [{ name: 'tj' }];
+var express = require('express');
+var nowjs = require('now');
+var async = require('async');
+var util = require('util');
 
-app.all('/user/:id/:op?', function(req, res, next){
-  req.user = users[req.params.id];
-  if (req.user) {
-    next();
-  } else {
-    next(new Error('cannot find user ' + req.params.id));
-  }
+
+var app = require('express').createServer();
+
+
+// Configuration
+
+app.configure(function(){
+  app.set('views', __dirname + '/views');
+  app.set('view engine', 'jade');
+  app.use(express.bodyParser());
+  app.use(express.methodOverride());
+  app.use(app.router);
+  app.use(express.static(__dirname + '/public'));
+  app.set('view options', { pretty: true });
 });
 
-app.get('/user/:id', function(req, res){
-  res.send('viewing ' + req.user.name);
+
+
+
+
+// Routes
+var routes = require('./routes');
+app.get('/', routes.index);
+app.get('/about', routes.about);
+app.get('/manage/:id', routes.manageid);
+
+
+//start services
+async.series([
+  //connect to db
+
+  // fire up web server
+  function(callback) {
+    app.listen(3000,callback);
+    console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);
+  },
+
+],
+//callback error handler
+function(err) {
+  if (err) { console.error("Problem with starting background services; "+err); }
 });
 
-app.get('/user/:id/edit', function(req, res){
-  res.send('editing ' + req.user.name);
-});
+// initialize now.js
+var everyone = nowjs.initialize(app);
+console.log("now.js added to server app.");
 
-app.put('/user/:id', function(req, res){
-  res.send('updating ' + req.user.name);
-});
+// now functions
 
-app.get('*', function(req, res){
-  res.send('what???', 404);
-});
+everyone.now.distributeMessage = function(message){
+  everyone.now.receiveMessage(this.now.name, message);
+};
 
-app.listen(3000);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

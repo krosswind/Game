@@ -1,0 +1,180 @@
+!= partial('../topnavbar.jade')
+	.container-fluid
+		.row-fluid
+			.span2
+				!= partial('sidebar.jade')
+			//- tabs view
+			div(data-bind="with:tabsView").span10
+				ul(data-bind="foreach: tabs").nav.nav-tabs
+					li(data-bind="css:{active: $data == $parent.chosenTabId()}, click: $parent.goToTab")
+						<!-- ko if: $parent.tabcount[$data]() && $data != "Closed" -->
+						<a data-bind="text: $data + ' (' + $parent.tabcount[$data]() +')' "></a>
+						<!-- /ko -->
+						<!-- ko if: !$parent.tabcount[$data]() || $data == "Closed" -->
+						<a data-bind="text: $data"></a>
+						<!-- /ko -->
+
+			//- ticket list view		
+			div(data-bind="visible: tableView.showTable, css: {hide: !tableView.showTable}").hide.span10
+				div(data-bind="with:tableView")
+					table#ticketlist.table.table-bordered.table-striped(data-bind="dataTable: { dataSource: tickets, rowTemplate: 'ticketListTemplate',  options: {bSort: false, iDisplayLength: 25}, columns: ['impact', 'age', 'lastmodified', 'subject', 'from', 'created'] }")
+						thead
+							tr
+								th impact
+								th age
+								th last modified									
+								th subject									
+								th from
+								th created
+										
+
+			//- individual ticket view
+			div(data-bind="if: ticketView.showTicket, css: {hide: !ticketView.showTicket}").hide.span10
+				div(data-bind="with:ticketView")					
+					div(data-bind="with: ticketData").span11
+						span.btn-toolbar.pull-right(data-bind="ifnot: $parent.editMode")
+							span.btn-group
+								button(data-toggle="modal", data-target="#deleteModal").btn <i class="icon-trash icon-black"></i> Delete Ticket
+							span.dropdown.btn-group(id="impactdropdown")
+								<a class="btn" data-toggle="dropdown" href="#impactdropdown"> Impact <b class="caret"></b></a>
+								ul.dropdown-menu(data-bind="foreach: $parent.impacts")
+									li
+										a(data-bind="text: $data, click: $root.ticketView.changeImpact")
+							span.dropdown.btn-group(id="tabdropdown")
+								<a class="btn" data-toggle="dropdown" href="#tabdropdown"> Tab <b class="caret"></b></a>
+								ul.dropdown-menu(data-bind="foreach: $root.tabsView.tabs")
+									li
+										a(data-bind="text: $data, click: $root.ticketView.changeStatus")
+							span.btn-group
+								button(data-bind="click: $parent.enableEditTicket").btn.btn-warning <i class="icon-edit icon-white"></i> Edit Ticket
+							span.btn-group
+								button(data-bind="click: $parent.closeTicket, disable: $parent.isClosed").btn.btn-success <i class="icon-check icon-white"></i> Close Ticket
+
+						.btn-toolbar.pull-right(data-bind="if: $parent.editMode")
+							span.btn-group
+								button(data-bind="click: $parent.disableEditTicket").btn <i class="icon-remove-sign icon-black"></i> Cancel Edit
+							span.btn-group
+								button(data-bind="click: $parent.saveEditChanges").btn.btn-success <i class="icon-ok icon-white"></i> Save Changes
+
+						br
+						ul.unstyled	
+							li
+								p <span class="label label-info">ID</span> <span data-bind="text: _id"></span>
+							li
+								p <span class="label label-info">created</span> <span data-bind="text: age"></span> - <span data-bind="text: created"></span>
+							li
+								p <span class="label label-info">last modified</span> <span data-bind="text: lastmodified"></span> - <span data-bind="text: friendlylastmodified"></span>
+							li
+								p <span class="label label-info">tab</span> <span data-bind="text: status"></span>
+							li
+								p <span class="label label-info">impact</span> <span class="badge" data-bind="text: impact"></span>
+							li(data-bind="ifnot: $parent.editMode")
+								p <span class="label label-info">from</span> <strong data-bind="text: from"></strong>
+						hr
+						div(data-bind="ifnot: $parent.editMode")
+							h1(data-bind="text: subject")
+						div(data-bind="if: $parent.editMode")
+							label from:
+								input(data-bind="value: from, valueUpdate: 'afterkeydown'").span12
+							label subject:
+								input(data-bind="value: subject, valueUpdate: 'afterkeydown'").span12
+						hr
+	
+					div(data-bind="with: ticketData").span11
+						div(data-bind="ifnot: $parent.editMode")
+							.well(data-bind="html: description")
+						div(data-bind="if: $parent.editMode")
+							label description:
+							textarea(data-bind="wysiwyg: description", id="descriptiontextarea", rows="50", cols="140").span12
+							span.btn-toolbar.pull-right(data-bind="if: $parent.editMode")
+								span.btn-group
+									button(data-bind="click: $parent.disableEditTicket").btn <i class="icon-remove-sign icon-black"></i> Cancel Edit
+								span.btn-group
+									button(data-bind="click: $parent.saveEditChanges").btn.btn-success <i class="icon-ok icon-white"></i> Save Changes
+							
+	
+					div(data-bind="ifnot: editMode").span11
+						div(data-bind="ifnot: showMailForm")
+							span.btn-toolbar.pull-right
+								span.btn-group
+									button(data-bind="click: writeMail, disable: isClosed").btn.btn-primary <i class="icon-envelope icon-white"></i> Write reply
+	
+						//- sending email form					
+						div(data-bind="if: showMailForm")
+							form(data-bind="slideVisible: showMailForm")
+								div.control-group
+									label.control-label(for="formto") To:
+									div.controls
+										input.span8(id="formsto", data-bind="value: mailForm.to")
+									label.control-label(for="formcc") CC:
+									div.controls
+										input.span8(id="formcc", data-bind="value: mailForm.cc") 
+										span.help-inline (Separate with commas)
+									label.control-label(for="formsubject") Subject:
+									div.controls
+										input.span12(id="formsubject", data-bind="value: mailForm.subject")
+								div.control-group
+									label.control-label(for="formtextarea") Message:
+									div.controls
+										textarea(data-bind="wysiwyg: mailForm.html", id="formtextarea", rows="50", cols="140").span12
+								span.btn-toolbar.pull-right
+									span.btn-group
+										button(data-bind="click: function(){showMailForm(false)}").btn Cancel reply
+									span.btn-group
+										button(data-bind="click: sendMailForm, disable: isClosed").btn.btn-success <i class="icon-envelope icon-white"></i> Send email
+	
+					//- email history
+					div(data-bind="with: ticketData").span11
+						br							
+						strong Email history:
+						hr
+						div(data-bind="foreach: emails")
+							div <span class="accordion-heading" data-bind="click: reverseShow"><i class="icon-resize-full"></i> <a data-bind="text: friendlydate, attr: {href: '', title: friendlydate}"></a> &bull; <span data-bind="html:from"></span> &bull; <span data-bind="html:subject"></span></span>
+								hr(data-bind="slideVisible: show")
+								blockquote(data-bind="slideVisible: show")
+									ul.unstyled	
+										li
+											p <span class="label label-info">From:</span> <span data-bind="text: from"></span>
+										li
+											p <span class="label label-info">To:</span> <span data-bind="text: to"></span>
+										li(data-bind="if: cc")
+											p <span class="label label-info">CC:</span> <span data-bind="text: cc"></span>
+									hr
+									span(data-bind="html: body")
+								hr(data-bind="slideVisible: show")
+							br
+							
+	
+
+
+<script Id="ticketListTemplate" type="text/html">
+<td width=5% data-bind="text: impact"></td>
+<td width=8% data-bind="text: age"></td>
+<td width=10% data-bind="text: lastmodified"></td>
+<td><a data-bind="text: subject"></a></td>
+<td width=17% data-bind="text: from"></td>
+<td width=17% data-bind="text: created"></td>
+
+</script>
+
+!= partial('modals.jade')
+
+script(src="/js/lib/moment.min.js")		
+script(src="/js/lib/jquery.dataTables.min.js")	
+script(src="/js/lib/bootstrap.datatables.js")		
+script(src="/js/topbar-viewmodel.js")
+script(src="/js/manage-viewmodelcontroller.js")
+script(src="/js/lib/jquery.wysiwyg.js")
+script(src="/js/lib/controls/wysiwyg.image.js")
+script(src="/js/lib/controls/wysiwyg.link.js")
+script(src="/js/lib/controls/wysiwyg.table.js")
+
+
+script
+	//get to work!
+	now.ready(function(){
+		//fire up a viewcontroller for the page via knockout, attach to global window
+		now.getManageStartupData(function(ticketcount,statuslist,lang){
+			window.controller = ko.applyBindings( new ManageViewModelController(ticketcount,statuslist,lang) );
+		});
+	});
