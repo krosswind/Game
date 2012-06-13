@@ -8,7 +8,11 @@
         .span4
             .hero-unit
                 h2 Ready To Play?
-                p
+
+                script(src="/javascripts/mainviewmodel.js")
+
+                p(data-bind="text: personName")
+
                 p
 
                 .btn-group
@@ -19,4 +23,7 @@
     .row-fluid
         .span3.well
             h2 Highscores
+
+script(src="/js/lib/jquery.wysiwyg.js")
+
 
