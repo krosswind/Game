@@ -8,11 +8,21 @@
         .span4
             .hero-unit
                 h2 Ready To Play?
+                
+                table
+                    thead
+                        tr 
+                            th Name
+                            th Age
+                    tbody(data-bind="foreach: people")
+                        tr 
+                            td(data-bind="text: name")
+                            td(data-bind="text: age")
 
-                script(src="/javascripts/mainviewmodel.js")
 
-                p(data-bind="text: personName")
-
+                p
+                p
+                p              
                 p
 
                 .btn-group
@@ -24,6 +34,12 @@
         .span3.well
             h2 Highscores
 
-script(src="/js/lib/jquery.wysiwyg.js")
+script(src="/js/mainviewmodel.js")
+
+
+script 
+    //get to work!
+    ko.applyBindings(new viewModel);
+
 
 
